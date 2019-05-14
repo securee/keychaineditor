@@ -1,12 +1,16 @@
 import Security
 import Foundation
 
-func addKeychainItem() -> OSStatus {
+func addKeychainItem(at secClass: String = kSecClassGenericPassword as String,
+                account: String,
+                service: String,
+                data: String,
+                agroup: String? = nil) -> OSStatus {
 
-    let account: String = "Test Account"
-    let service: String = "Test Service"
-    let accessibleConstant = kSecAttrAccessibleAlways
-    let data: Data = "".data(using: String.Encoding.utf8)!
+    guard let addedData = data.data(using: String.Encoding.utf8) else {
+        NSLog("AddKeychainItem() -> Error while unwrapping user-supplied data.")
+        exit(EXIT_FAILURE)
+    }
 
     var status: OSStatus = -1
     var error: Unmanaged<CFError>?
@@ -15,16 +19,16 @@ func addKeychainItem() -> OSStatus {
             kSecAttrAccessibleWhenUnlocked, .devicePasscode, &error) {
 
         let query = [
-            kSecClass as String         :   kSecClassGenericPassword as String,
-            kSecAttrAccount as String   :   account,
-            kSecAttrService as String   :   service,
-            kSecAttrAccessible as String:   accessibleConstant,
+            kSecClass as String          : kSecClassGenericPassword as String,
+            kSecAttrAccount as String    : account,
+            kSecAttrService as String    : service,
+            kSecAttrAccessible as String : kSecAttrAccessibleAlways,
+            kSecAttrAccessGroup as String: agroup ?? "*",
             // Uncomment the following line to add AccessControl. Make sure
             // "acl" is defined above in the if let scope.
-            //kSecAttrAccessControl as String :   acl,
-            kSecValueData as String     :   data
+            // kSecAttrAccessControl as String :   acl,
+            kSecValueData as String      : addedData
             ] as [String : Any]
-
         status = SecItemAdd(query as CFDictionary, nil)
     } else {
         print("[addItem::SecAccessControl] - \(error?.takeUnretainedValue())")

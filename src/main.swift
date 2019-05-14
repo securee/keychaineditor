@@ -5,7 +5,8 @@ func printUsage() {
     print("Commands Description")
     print("  -v     version")
     print("  -f     Search. Requires a query string as the second argument.")
-    print("  -e     Edit. Requires --account STRING --service STRING [--agroup STRING] --data STRING")
+    print("  -a     Add.    Requires --account STRING --service STRING [--agroup STRING] --data STRING")
+    print("  -e     Edit.   Requires --account STRING --service STRING [--agroup STRING] --data STRING")
     print("  -d     Delete. Requires --account STRING --service STRING [--agroup STRING]")
     print("NOTES:")
     print(" * Account and Service names are used to uniquely identify a item. An optional AccessGroup can also be passed to identify the item.")
@@ -14,6 +15,7 @@ func printUsage() {
     print("EXAMPLES:")
     print(" * To Dump entire keychain: $ keychaineditor")
     print(" * Limit dump by searching: $ keychaineditor -f 'test'")
+    print(" * Add a keychain item:     $ keychaineditor -a --account 'TestAccount' --service 'TestService' --data 'TestData'")
     print(" * Edit a keychain item:    $ keychaineditor -e --account 'TestAccount' --service 'TestService' --data 'TestData'")
     print(" * Delete a keychain item:  $ keychaineditor -d --account 'TestAccount' --service 'TestService'")
     exit(EXIT_FAILURE)
@@ -23,6 +25,15 @@ func handleSearch(args: UserDefaults) {
     if let query = args.string(forKey: "f") {
         let items = search(for: query, in: dumpKeychainItems())
         print(convertToJSON(for: items))
+    } else {
+        printUsage()
+    }
+}
+
+func handleAdd(args: UserDefaults) {
+    if let account = args.string(forKey: "-account") , let service = args.string(forKey: "-service") , let data = args.string(forKey: "-data") {
+        let status = addKeychainItem(account: account, service: service, data: decodeIfBase64(for: data), agroup: args.string(forKey: "-agroup"))
+        print(errorMessage(for: status))
     } else {
         printUsage()
     }
